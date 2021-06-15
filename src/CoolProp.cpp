@@ -1103,3 +1103,32 @@ std::string PhaseSI(const std::string &Name1, double Prop1, const std::string &N
 }
 */
 } /* namespace CoolProp */
+
+void *initializeCoolPropAbstractState(const char *backend, const char *fluidName) {
+    shared_ptr<CoolProp::AbstractState>* abstractState = new shared_ptr<CoolProp::AbstractState>(
+        CoolProp::AbstractState::factory(backend, fluidName)
+    );
+    return abstractState;
+}
+
+void deleteCoolPropAbstractState(void* abstractState) {
+    shared_ptr<CoolProp::AbstractState>* abstractState_ = static_cast<shared_ptr<CoolProp::AbstractState>*>(abstractState);
+    delete abstractState_;
+}
+
+void updateCoolPropAbstractState(void* abstractState, double specificHeat, double pressure) {
+    shared_ptr<CoolProp::AbstractState>* abstractState_ = static_cast<shared_ptr<CoolProp::AbstractState>*>(abstractState);
+    (*abstractState_)->update(CoolProp::HmassP_INPUTS, specificHeat, pressure);
+}
+
+// how should I handle using enum
+double keyedOutputCoolPropAbstractState(void* abstractState, const char *key) {
+    shared_ptr<CoolProp::AbstractState>* abstractState_ = static_cast<shared_ptr<CoolProp::AbstractState>*>(abstractState);
+    // TODO: optimize key lookup
+    CoolProp::parameters key_;
+    if (!is_valid_parameter(key, key_)) {
+        std::string msg = "invalid key `" + std::string(key) + "` in keyedOutputCoolPropAbstractState";
+        throw CoolProp::ValueError(msg);
+    }
+    return (*abstractState_)->keyed_output(key_);
+}
